@@ -1,17 +1,54 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <h3>AWS Amplify - Vue Js Boldr Application</h3>
+  <input type="email" v-model="email" placeholder="Email address" required />
+  <button @click="subscribe">Subscribe</button>
+  <h4>Subscribed Emails</h4>
+  <div v-for="email in emails" :key="email.id">
+    <h5>
+      {{ email.email }}
+    </h5>
+  </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import { DataStore } from "@aws-amplify/datastore";
+import { BOLDR } from "./models";
 
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
+  name: "App",
+  data: function () {
+    return { email: "", emails: [] };
+  },
+  components: {},
+  methods: {
+    async subscribe() {
+      const emails = await DataStore.query(BOLDR, (boldr) =>
+        boldr.email("eq", this.email)
+      );
+      if (emails.length == 0) {
+        await DataStore.save(
+          new BOLDR({
+            email: this.email,
+          })
+        );
+         this.querySubscribeEmails();
+         this.email = "";
+      } else {
+        alert("Email exists");
+        this.email = "";
+      }
+    },
+    async querySubscribeEmails() {
+      const models = await DataStore.query(BOLDR);
+
+      this.emails = models;
+     
+    },
+  },
+  mounted() {
+    this.querySubscribeEmails();
+  },
+};
 </script>
 
 <style>
